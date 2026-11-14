@@ -308,6 +308,7 @@
   .float::before{display:block!important;position:fixed!important;inset:0!important;-webkit-mask-image:none!important;mask-image:none!important;
     background:rgba(4,5,18,.72)!important;border-radius:0!important;filter:none!important}
   #hdr{position:relative;z-index:3}   /* depth box, prompt boxes and label stay bright above the dim */
+  #skipBtn{display:block;margin:10px auto 0;font-size:10px;letter-spacing:3px;opacity:.8}
   /* 3-2-1 before the first prompt: same dim as when text is up */
   body.counting::before{content:"";position:fixed;inset:0;background:rgba(4,5,18,.72);z-index:2;pointer-events:none}
   #count{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;pointer-events:none;font-family:var(--px);font-size:88px;color:var(--neon);
@@ -374,6 +375,7 @@
       <div class="sug hidden" id="sug"></div>
     </form>
     <div class="timer"><i id="timerBar"></i></div>
+    <button class="linkbtn" id="skipBtn" type="button">SKIP</button>
     <div class="hint" id="hint"></div>
     <div class="hint" id="misses"></div>
   </section>
@@ -1507,7 +1509,7 @@ if(DEMO){
 }
 
 // ---------- curve ----------
-const MINN=10, MODEL={mu:380,sd:210}, MAXFT=7*230;   // scores are feet dug (max 1,610)
+const MINN=10, MODEL={mu:300,sd:190}, MAXFT=7*230;   // scores are feet dug (max 1,610)
 function normCdf(z){const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2);let p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
 let lastPct="";
 function drawCurve(scores,mine){
@@ -1527,7 +1529,7 @@ function drawCurve(scores,mine){
   if(real){const below=scores.filter(s=>s<mine).length,eq=scores.filter(s=>s===mine).length;pct=Math.round(100*(below+Math.max(0,eq-1)/2)/Math.max(1,scores.length-1));
     $("pct").textContent=`DEEPER THAN ${pct}% OF TODAY'S MINERS`;$("pctNote").textContent=`${scores.length} miners so far today.`;}
   else{pct=Math.max(1,Math.min(99,Math.round(100*normCdf((mine-MODEL.mu)/MODEL.sd))));$("pct").textContent=`DEEPER THAN ~${pct}% OF MINERS`;
-    $("pctNote").textContent=practice?"Estimate. Practice digs don't count toward today's stats.":scores?`Estimate for now. Real stats show once ${MINN} people have played today (${scores.length} so far).`:"Estimate. Loading today's stats...";}
+    $("pctNote").textContent="";}
   lastPct=`Deeper than ${real?"":"~"}${pct}% of ${real?"today's ":""}miners`;
 }
 async function syncStats(t){
@@ -1578,6 +1580,8 @@ new MutationObserver(syncFog).observe(document.getElementById("app"),{subtree:tr
 $("howBtn").onclick=()=>{$("how").classList.toggle("hidden"); sfx.blip();};
 $("howX").onclick=()=>{$("how").classList.add("hidden"); sfx.blip();};
 addEventListener("keydown",e=>{if(e.key==="Escape")$("how").classList.add("hidden");});
+$("skipBtn").onclick=()=>{ if(!timerOn) return; sfx.blip(); finishRound(-1,-1); };   // give up on this one: a nap, no feet
+if(!DEMO) $("practiceBtn").classList.add("hidden");                                  // practice digs are a test tool, not in the public game
 $("practiceBtn").onclick=()=>{sfx.blip();scrollTo(0,0);startGame(true).catch(()=>{$("pctNote").textContent="Couldn't load a practice mine. Try again.";});};
 $("nextBtn").onclick=next; $("shareBtn").onclick=share;
 // ---------- every answer, after the day's dig is done; each prompt has a "report a problem" box ----------
