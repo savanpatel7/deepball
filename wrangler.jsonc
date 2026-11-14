@@ -5,6 +5,6 @@
   "workers_dev": true,
   "assets": { "directory": "./public", "binding": "ASSETS" },
   "d1_databases": [
-    { "binding": "DB", "database_name": "deepball-scores", "database_id": "PASTE_DATABASE_ID_HERE" }
+    { "binding": "DB", "database_name": "deepball-scores", "database_id": "22bdb846-13f2-4286-9e75-7720e12ab465" }
   ]
 }
