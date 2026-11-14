@@ -1,0 +1,10 @@
+{
+  "name": "deepball",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "deepball-scores", "database_id": "PASTE_DATABASE_ID_HERE" }
+  ]
+}
