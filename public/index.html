@@ -1560,13 +1560,7 @@ function shareCard(){
 function shareText(){const t=total();
   const S=practice?{cur:0}:streakInfo();
   return `DEEP BALL ${practice?"(practice)":"#"+digNo} ⛏️ ${t.toLocaleString()} ft deep\n${results.map(r=>r.e).join("")}\n${lastPct}`+(S.cur>=2?`\n🔥 ${S.cur}-day streak`:"");}
-async function share(){sfx.blip();const txt=shareText();
-  try{ const cv_=shareCard(), blob=await new Promise(r=>cv_.toBlob(r,"image/png")), file=new File([blob],"deep-ball.png",{type:"image/png"});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],text:txt}); $("copied").textContent="SHARED!"; return; }
-    const url=URL.createObjectURL(blob); $("cardWrap").innerHTML=`<img alt="Deep Ball result card" src="${url}"><a href="${url}" download="deep-ball.png">SAVE THE CARD</a>`; $("cardWrap").classList.remove("hidden");
-    if(DL) $("cardWrap").querySelector("a").onclick=e=>{ e.preventDefault();   // inside the artifact viewer, save through its downloads prompt
-        blob.arrayBuffer().then(b=>DL.save({filename:"deep-ball.png",data:new Uint8Array(b)})).catch(()=>{}); };
-  }catch(e){ if(e&&e.name==="AbortError") return; }
+async function share(){sfx.blip();const txt=shareText();   // text only: no picture card
   try{await navigator.clipboard.writeText(txt);$("copied").textContent="COPIED TO CLIPBOARD!";}
   catch(e){$("fallbackWrap").innerHTML=`<textarea class="fallback" readonly></textarea>`;const ta=$("fallbackWrap").firstChild;ta.value=txt;ta.focus();ta.select();$("copied").textContent="COPY THE TEXT BELOW";}}
 function countdown(){const p=etParts(),s=86400-(p.h*3600+p.mi*60+p.s);$("countdown").textContent=[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(v=>String(v).padStart(2,"0")).join(":");}
