@@ -1509,7 +1509,7 @@ if(DEMO){
 }
 
 // ---------- curve ----------
-const MINN=10, MODEL={mu:300,sd:190}, MAXFT=7*230;   // scores are feet dug (max 1,610)
+const MINN=10, MODEL={med:230,s:.55}, MAXFT=7*230;   // scores are feet dug (max 1,610)
 function normCdf(z){const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2);let p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
 let lastPct="";
 function drawCurve(scores,mine){
@@ -1518,7 +1518,8 @@ function drawCurve(scores,mine){
   if(real){const bw=35,bins=Array(21).fill(0);scores.forEach(s=>bins[Math.min(20,Math.floor(s/bw))]++);
     const sm=bins.map((b,i)=>(bins[i-1]||0)*.25+b*.5+(bins[i+1]||0)*.25),mx=Math.max(...sm,1);
     pts=sm.map((v,i)=>[xs(i*bw+bw/2),h-pad-(h-2*pad)*v/mx]);}
-  else for(let v=0;v<=MAXFT;v+=20){const z=(v-MODEL.mu)/MODEL.sd;pts.push([xs(v),h-pad-(h-2*pad)*Math.exp(-z*z/2)]);}
+  else{ const dens=v=>{const x=Math.max(1,v),z=Math.log(x/MODEL.med)/MODEL.s;return Math.exp(-z*z/2)/x;}, peak=dens(MODEL.med*Math.exp(-MODEL.s*MODEL.s));   // skewed: most digs land shallow, a few go very deep
+    for(let v=0;v<=MAXFT;v+=10) pts.push([xs(v),h-pad-(h-2*pad)*dens(v)/peak]); }
   const path="M"+pts.map(p=>p.map(n=>n.toFixed(1)).join(",")).join("L"), mx=xs(mine);
   $("curve").innerHTML=`<svg viewBox="0 0 ${w} ${h}"><path d="${path}L${pts[pts.length-1][0]},${h-pad}L${pts[0][0]},${h-pad}Z" fill="#f2c14e55"/><path d="${path}" fill="none" stroke="#8a5a1c" stroke-width="3"/>
   <line x1="${pad}" x2="${w-pad}" y1="${h-pad}" y2="${h-pad}" stroke="#1e1626" stroke-width="2"/>
@@ -1528,7 +1529,7 @@ function drawCurve(scores,mine){
   let pct;
   if(real){const below=scores.filter(s=>s<mine).length,eq=scores.filter(s=>s===mine).length;pct=Math.round(100*(below+Math.max(0,eq-1)/2)/Math.max(1,scores.length-1));
     $("pct").textContent=`DEEPER THAN ${pct}% OF TODAY'S MINERS`;$("pctNote").textContent=`${scores.length} miners so far today.`;}
-  else{pct=Math.max(1,Math.min(99,Math.round(100*normCdf((mine-MODEL.mu)/MODEL.sd))));$("pct").textContent=`DEEPER THAN ~${pct}% OF MINERS`;
+  else{pct=Math.max(1,Math.min(99,Math.round(100*normCdf(Math.log(Math.max(1,mine)/MODEL.med)/MODEL.s))));$("pct").textContent=`DEEPER THAN ~${pct}% OF MINERS`;
     $("pctNote").textContent="";}
   lastPct=`Deeper than ${real?"":"~"}${pct}% of ${real?"today's ":""}miners`;
 }
