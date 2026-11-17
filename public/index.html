@@ -1509,7 +1509,7 @@ if(DEMO){
 }
 
 // ---------- curve ----------
-const MINN=10, MODEL={med:230,s:.55}, MAXFT=7*230;   // scores are feet dug (max 1,610)
+const MINN=10, MODEL={med:260,s:.55}, MAXFT=7*230;   // scores are feet dug (max 1,610)
 function normCdf(z){const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2);let p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
 let lastPct="";
 function drawCurve(scores,mine){

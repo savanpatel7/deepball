@@ -12,6 +12,7 @@ rng = np.random.default_rng(7)
 # a prompt must have at least MIN_NAMEABLE answers among each sport's NAMEABLE_K most famous players
 MIN_NAMEABLE = 8
 MIN_STARS = int(os.environ.get("MIN_STARS", 3)); STARLOG = []
+MIN_EASY_STARS = int(os.environ.get("MIN_EASY_STARS", 2)); EASY_VIEWS = 300000; EASY_K = {"nba": 200, "nfl": 250, "mlb": 300}
 STAR_VIEWS = {"mlb": int(os.environ.get("SV_US", 250000)), "nfl": int(os.environ.get("SV_US", 250000)), "nba": int(os.environ.get("SV_US", 250000)),
               **{k: int(os.environ.get("SV_SOC", 120000)) for k in ("soc", "epl", "liga", "seriea", "bund", "ligue1", "mls", "ucl")},
               "cfbcoach": 100000}   # college coaches are read far less than pros: Mack Brown draws about 160k a year
@@ -138,6 +139,15 @@ class Sport:
                 stars = sum(1 for i in p["ids"] if (sv is not None and sp.VIEWS.get(i, 0) >= sv) or sp.GQ[i] * N_ <= STAR_K.get(sp.key, 120))
                 STARLOG.append((s.key, p["t"], stars))
                 if stars < MIN_STARS: continue
+                # the easy end has to be easy: at least 2 of the Dirt/Stone answers must be household names
+                # (Jazz + Raptors: the "common" answers were Kelly Olynyk and Kyle Anderson)
+                if sp.key in EASY_K:   # pros: a real household name (Joe Johnson yes, Kelly Olynyk no)
+                    isstar = lambda i: sp.VIEWS.get(i, 0) >= EASY_VIEWS or sp.GQ[i] * N_ <= EASY_K[sp.key]
+                else:
+                    isstar = lambda i: (sv is not None and sp.VIEWS.get(i, 0) >= sv) or sp.GQ[i] * N_ <= STAR_K.get(sp.key, 120)
+                easy_stars = sum(1 for i in p["ids"] if t[i] <= 1 and isstar(i))
+                STARLOG.append((s.key, p["t"], -easy_stars))
+                if easy_stars < MIN_EASY_STARS: continue
                 q["_d"] = 0 if nm >= 25 else 1 if nm >= 12 else 2   # 0 easy, 1 medium, 2 hard
                 out.append(q)
         print(s.key, len(s.prompts), "candidates ->", len(out), "difficulty", Counter(p["_d"] for p in out), Counter(p["k"] for p in out))
@@ -1398,3 +1408,4 @@ print(day, "days written")
 for f in glob.glob(f"{OUT}/players_*.json"): print(f, os.path.getsize(f) // 1024, "KB")
 sz = [os.path.getsize(f) for f in glob.glob(f"{OUT}/days/*.json")]; print("day files avg", sum(sz) // len(sz) // 1024, "KB, max", max(sz) // 1024, "KB")
 pd.to_pickle(banks, "banks.pkl"); pd.to_pickle(STARLOG, "starlog.pkl")
+pd.to_pickle({sp_.key: (sp_.VIEWS, sp_.GQ, sp_.NPOOL or len(sp_.ids), [e[0] for e in sp_.players], sp_.IDX) for sp_ in (mlb, nfl, nba)}, "fame.pkl")
