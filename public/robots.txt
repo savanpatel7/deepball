@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://deepball.dbgame.workers.dev/sitemap.xml
