@@ -130,7 +130,7 @@ class Sport:
                 q = {"t": p["t"], "k": p["k"], "s": s.key, "era": p["era"], "a": sorted([[sp.IDX[i], int(t[i])] for i in p["ids"]])}
                 if p.get("pool") is not None: q["p"] = sp.key
                 if p.get("who"): q["w"] = p["who"]
-                q["h"] = [sp.IDX[i] for i in sorted(p["ids"], key=lambda i: (i in p.get("_floor", {}), -sp.FAME[i]))[:3]]   # the three best-known answers, shown when time runs out
+                q["h"] = [sp.IDX[i] for i in sorted(p["ids"], key=lambda i: (t[i], i in p.get("_floor", {}), -sp.FAME[i]))[:3]]   # shown when time runs out: the easiest answers (lowest tier, then best known), never a famous name graded deep
                 # difficulty gate: count answers a regular fan could name (inside the sport's top-K most famous players)
                 nm = sum(sp.GQ[i] * (sp.NPOOL or len(sp.ids)) <= NAMEABLE_K.get(sp.key, 1500) for i in p["ids"])
                 if nm < (MIN_NAMEABLE_COACH if p.get("pool") is not None else MIN_NAMEABLE): continue
@@ -1350,6 +1350,7 @@ for k, bank in banks.items():
 # each day: one prompt from each sport (6) plus one extra from whichever sport has the most left
 _newpl = {s.key: s.players for s in (mlb, nfl, nba, soc, f1, nflc, mlbm, nbac, socc, cfbc, cbbc, cfb, mbb, intl_pool)}
 def _remap(pool, i):
+    if _oldpl[pool] == _newpl[pool]: return i        # list unchanged: keep the index (two players can share a name and years)
     o = _oldpl[pool][i]; nw = _newpl[pool]
     if not hasattr(_remap, "ix"): _remap.ix = {}
     if pool not in _remap.ix:
@@ -1408,4 +1409,4 @@ print(day, "days written")
 for f in glob.glob(f"{OUT}/players_*.json"): print(f, os.path.getsize(f) // 1024, "KB")
 sz = [os.path.getsize(f) for f in glob.glob(f"{OUT}/days/*.json")]; print("day files avg", sum(sz) // len(sz) // 1024, "KB, max", max(sz) // 1024, "KB")
 pd.to_pickle(banks, "banks.pkl"); pd.to_pickle(STARLOG, "starlog.pkl")
-pd.to_pickle({sp_.key: (sp_.VIEWS, sp_.GQ, sp_.NPOOL or len(sp_.ids), [e[0] for e in sp_.players], sp_.IDX) for sp_ in (mlb, nfl, nba)}, "fame.pkl")
+pd.to_pickle({sp_.key: (sp_.VIEWS, sp_.GQ, sp_.NPOOL or len(sp_.ids), [e[0] for e in sp_.players], sp_.IDX) for sp_ in (mlb, nfl, nba, soc, f1, nflc, mlbm, nbac, socc, cfbc, cbbc, cfb, mbb, intl_pool)}, "fame.pkl")
